@@ -1,4 +1,4 @@
-import { Component, DestroyRef } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild } from '@angular/core';
 import { SendMessageComponent } from '../../shared/components/send-message/send-message.component';
 import { MessageComponent } from '../../shared/components/message/message.component';
 import { Message } from '../../models/message.model';
@@ -40,14 +40,19 @@ export class ChatRoomComponent {
 
   // Subject to close the stream when the user sends a new message.
   private closeStreamSubject = new Subject<void>();
+
+  // Reference to the chat wrapper to scroll to the bottom of the chat.
+  @ViewChild('chat', { static: true })
+  bodyWrapper!: ElementRef<HTMLDivElement>;
+
+  public llmMsg: string = '';
+
   constructor(
     private auth: Auth,
     private firestore: Firestore,
     private lmstudioService: LmstudioService,
     private destroyRef: DestroyRef
   ) {}
-  public llmMsg: string = '';
-
   ngOnInit() {
     this.email = this.auth.currentUser?.email || 'No user';
     this.messages = [];
@@ -55,30 +60,30 @@ export class ChatRoomComponent {
   }
 
   getData() {
-    let colRef = collection(
-      this.firestore,
-      'chat_msg',
-      '2SXYR7ReXQm0Ayh5axrF',
-      'msg'
-    );
-    getDocs(colRef)
-      .then((querySnapShot) => {
-        querySnapShot.forEach((doc) => {
-          let data = doc.data();
-          const msg: Message = {
-            id: data['id'],
-            text: data['text'],
-            created_at: data['created_at'],
-            isUser: data['isUser'],
-          };
+    // let colRef = collection(
+    //   this.firestore,
+    //   'chat_msg',
+    //   '2SXYR7ReXQm0Ayh5axrF',
+    //   'msg'
+    // );
+    // getDocs(colRef)
+    //   .then((querySnapShot) => {
+    //     querySnapShot.forEach((doc) => {
+    //       let data = doc.data();
+    //       const msg: Message = {
+    //         id: data['id'],
+    //         text: data['text'],
+    //         created_at: data['created_at'],
+    //         isUser: data['isUser'],
+    //       };
 
-          this.messages.push(msg);
-          console.log(msg);
-        });
-      })
-      .catch((error) => {
-        console.error('Error getting documents: ', error);
-      });
+    //       this.messages.push(msg);
+    //       console.log(msg);
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error getting documents: ', error);
+    //   });
   }
 
   onSendMsg(newMsg: string) {
@@ -90,6 +95,15 @@ export class ChatRoomComponent {
       isUser: true,
     };
     this.messages.push(msg);
+    
+    const newLMmsg: Message = {
+      id: this.messages.length.toString(),
+      text: this.llmMsg,
+      created_at: new Date(),
+      isUser: false,
+    };
+    this.messages.push(newLMmsg);
+
     this.sendMsgToLLM(msg.text);
   }
 
@@ -101,61 +115,21 @@ export class ChatRoomComponent {
         takeUntil(this.closeStreamSubject)
       )
       .subscribe({
-        next: (event) => {
-          this.startReceiveStreamResponse(event);
-        },
-        error: (error) => {
-          console.error(error);
-        },
-      });
-  }
+        next: (chunk) => {
 
-  /*
-    Responose data from LMStudio is a string. Each line is a object that contains a word from the response of LLM.
-    It is called "object":"chat.completion.chunk".
-    data: {"id":"chatcmpl-6oxly7cb0bqwvslpmfepmk","object":"chat.completion.chunk",
-    "created":1724310345,"model":"lmstudio-ai/gemma-2b-it-GGUF/gemma-2b-it-q8_0.gguf","choices":[{"index":0,"delta":{"role":"assistant","content":" I"},"finish_reason":null}]}
-    @param event 
-   */
-  startReceiveStreamResponse(event: HttpEvent<string>) {
-    if (event.type === HttpEventType.DownloadProgress) {
-      const progress = event as HttpDownloadProgressEvent;
-      const msges: ChatCompletion[] = this.paresResponse(
-        progress.partialText || ''
-      ); // list of each words as an object from LMstudio response
-      // console.log(msges)
-      let finalMsg = '';
-      msges.forEach((msg) => {
-        msg.choices.forEach((choice) => {
-          if (choice.delta.content) {
-            finalMsg += choice.delta.content;
+          if(!chunk.startsWith('data')){
+            this.messages[this.messages.length - 1].text = chunk
           }
-        });
+        },
+        error: (err) => console.error('Error receiving stream:', err),
+        complete: () => {
+          this.llmMsg = ''
+          this.bodyWrapper.nativeElement.scrollTop =this.bodyWrapper.nativeElement.scrollHeight;
+        },
       });
-      const msg: Message = {
-        id: this.messages.length.toString(),
-        text: finalMsg,
-        created_at: new Date(),
-        isUser: false,
-      };
-      this.messages.push(msg);
-    }
   }
 
-  /**
-   *
-   * @param res the response data from LMstudio
-   */
-  paresResponse(res: string) {
-    const msges: ChatCompletion[] = [];
-    const split_res = res.split('\n');
-    split_res.forEach((res) => {
-      const trim_res = res.trim();
-      if (trim_res.startsWith('data: {')) {
-        const data: ChatCompletion = JSON.parse(trim_res.substring(5)); // remove the 'data:', only keep the json object
-        msges.push(data);
-      }
-    });
-    return msges;
-  }
+
+
+
 }

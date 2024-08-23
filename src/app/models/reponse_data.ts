@@ -20,6 +20,7 @@ export interface ChatCompletion {
 export interface Choice {
   index: number;
   delta: Msg;
+  finish_reason: string;
 }
 
 export interface Msg {
