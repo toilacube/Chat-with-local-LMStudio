@@ -12,9 +12,14 @@ https://github.com/user-attachments/assets/023b6a75-d2dd-4ad4-83af-2b50efc2d1a2
 
 ![Screenshot](/public/screen2.png)
 
+## LMStudio setup
+
+![image](https://github.com/user-attachments/assets/08a6a958-4d2b-426d-90d3-9d2174cbbc9a)
+
+
 ## Tech stacks:
 - Angular 18
-- LMStudio API server
+- [LMStudio API server](https://lmstudio.ai/)
 
 ## Usage
 
