@@ -1,4 +1,4 @@
-# Chat with your local LLM from LMStudio
+# Chat with your local Large Language Model
 
 ## Tech stacks:
 - Angular 18
