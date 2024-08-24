@@ -1,6 +1,8 @@
 # Chat with your local LLM from LMStudio
 
-[Demo link]()
+## Demo
+
+https://github.com/user-attachments/assets/023b6a75-d2dd-4ad4-83af-2b50efc2d1a2
 
 ## Screenshot
 
