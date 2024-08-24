@@ -10,7 +10,8 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
 import { firebaseConfig } from '../environments/environments';
 import { provideHttpClient } from '@angular/common/http';
-
+import { provideMarkdown } from 'ngx-markdown';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,5 +21,6 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()), 
     provideHttpClient(),
+    provideMarkdown(), provideAnimationsAsync('noop'),
   ]
 };

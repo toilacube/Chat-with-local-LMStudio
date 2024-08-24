@@ -22,28 +22,29 @@ import {
 } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, takeUntil } from 'rxjs';
-import { error } from 'console';
-import { ChatCompletion } from '../../models/reponse_data';
+import { NavBarComponent } from "../../shared/components/nav-bar/nav-bar.component";
+import { SharedDataService } from '../../services/shared-data.service';
+
 
 @Component({
   selector: 'app-chat-room',
   standalone: true,
-  imports: [SendMessageComponent, MessageComponent],
+  imports: [SendMessageComponent, MessageComponent, NavBarComponent],
   templateUrl: './chat-room.component.html',
   styleUrl: './chat-room.component.css',
 })
 export class ChatRoomComponent {
-  private email!: string;
   public messages!: Message[];
   public response: string = '';
   public model: string = 'lmstudio-ai/gemma-2b-it-GGUF';
+  public sysPrompt: string = ''
 
   // Subject to close the stream when the user sends a new message.
   private closeStreamSubject = new Subject<void>();
 
   // Reference to the chat wrapper to scroll to the bottom of the chat.
   @ViewChild('chat', { static: true })
-  bodyWrapper!: ElementRef<HTMLDivElement>;
+  chat!: ElementRef;
 
   public llmMsg: string = '';
 
@@ -51,39 +52,14 @@ export class ChatRoomComponent {
     private auth: Auth,
     private firestore: Firestore,
     private lmstudioService: LmstudioService,
-    private destroyRef: DestroyRef
-  ) {}
-  ngOnInit() {
-    this.email = this.auth.currentUser?.email || 'No user';
-    this.messages = [];
-    this.getData();
+    private destroyRef: DestroyRef,
+    private modelService: SharedDataService,
+  ) {
+    this.modelService.currentModel.subscribe(model => this.model = model)
+    this.modelService.currentPrompt.subscribe(prompt => this.sysPrompt = prompt)
   }
-
-  getData() {
-    // let colRef = collection(
-    //   this.firestore,
-    //   'chat_msg',
-    //   '2SXYR7ReXQm0Ayh5axrF',
-    //   'msg'
-    // );
-    // getDocs(colRef)
-    //   .then((querySnapShot) => {
-    //     querySnapShot.forEach((doc) => {
-    //       let data = doc.data();
-    //       const msg: Message = {
-    //         id: data['id'],
-    //         text: data['text'],
-    //         created_at: data['created_at'],
-    //         isUser: data['isUser'],
-    //       };
-
-    //       this.messages.push(msg);
-    //       console.log(msg);
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     console.error('Error getting documents: ', error);
-    //   });
+  ngOnInit() {
+    this.messages = [];
   }
 
   onSendMsg(newMsg: string) {
@@ -105,11 +81,12 @@ export class ChatRoomComponent {
     this.messages.push(newLMmsg);
 
     this.sendMsgToLLM(msg.text);
+    this.scrollToBottom()
   }
 
   sendMsgToLLM(message: string) {
     this.lmstudioService
-      .sendMsg(this.model, message)
+      .sendMsg(this.model, message, this.sysPrompt)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         takeUntil(this.closeStreamSubject)
@@ -119,17 +96,24 @@ export class ChatRoomComponent {
 
           if(!chunk.startsWith('data')){
             this.messages[this.messages.length - 1].text = chunk
+            this.scrollToBottom()
           }
         },
         error: (err) => console.error('Error receiving stream:', err),
         complete: () => {
           this.llmMsg = ''
-          this.bodyWrapper.nativeElement.scrollTop =this.bodyWrapper.nativeElement.scrollHeight;
+          this.scrollToBottom()
         },
       });
   }
 
-
+  scrollToBottom(): void{
+    try {
+      this.chat.nativeElement.scrollTop =this.chat.nativeElement.scrollHeight;
+    } catch(err){
+      console.log(err)
+    }
+  }
 
 
 }

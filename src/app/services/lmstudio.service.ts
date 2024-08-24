@@ -16,10 +16,13 @@ import { ChatCompletion } from '../models/reponse_data';
 export class LmstudioService {
   constructor(private http: HttpClient) {}
 
-  public sendMsg(model: string, message: string) {
+  public sendMsg(model: string, message: string, sysPrompt: string) {
     const body = {
-      model: 'model-identifier',
-      messages: [{ role: 'user', content: message }],
+      model: model,
+      messages: [
+        {role: 'system', content: sysPrompt || ' '},
+        { role: 'user', content: message }
+      ],
       max_tokens: -1,
       temperature: 0.7,
       top_p: 1,

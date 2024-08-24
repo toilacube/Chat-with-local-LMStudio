@@ -1,4 +1,19 @@
-<div class="bg-gray-800 font-bold text-xs text-white p-4 flex items-center justify-center">
-Chat with your local LLM
-</div>
+<div class="font-bold text-xs text-black px-12 py-4 flex items-center justify-between">
 
+    <div class="flex flex-col justify-center items-center">
+        <textarea id="message" rows="2" [(ngModel)]="textPrompt" (change)="changePrompt()"
+            class="block p-2.5 w-full  text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Write your custom prompt here."></textarea>
+
+    </div>
+    <select [(ngModel)]="selectedModel" (change)="changeModel()"
+        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 ">
+        <option value="lmstudio-ai/gemma-2b-it-GGUF/gemma-2b-it-q8_0.gguf" selected>Gemma - 2B</option>
+        <option value="lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf">Llama 3 V2 - 7B</option>
+        <option value="
+        lmstudio-ai/gemma-2b-it-GGUF/gemma-2b-it-q8_0.gguf">Llama 3 - 8B</option>
+        <option value="
+        lmstudio-ai/gemma-2b-it-GGUF/gemma-2b-it-q8_0.gguf">Gemma 2B</option>
+    </select>
+
+</div>
