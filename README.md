@@ -16,11 +16,11 @@ https://github.com/user-attachments/assets/023b6a75-d2dd-4ad4-83af-2b50efc2d1a2
 
 ![Screenshot](/public/screen1.png)
 
-![Screenshot](/public/screen3.png)
-
 Select different LLM and custom prompt for LLM behavior
 
 ![Screenshot](/public/screen2.png)
+
+![Screenshot](/public/screen3.png)
 
 ## LMStudio setup
 
